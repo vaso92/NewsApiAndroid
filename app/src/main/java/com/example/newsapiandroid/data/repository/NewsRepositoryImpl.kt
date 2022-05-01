@@ -6,7 +6,7 @@ import com.example.newsapiandroid.domain.repository.NewsRepository
 import javax.inject.Inject
 
 class NewsRepositoryImpl @Inject constructor(private val newsApi: NewsApi) : NewsRepository {
-    override suspend fun getNews(): AllNews {
-        return newsApi.getNews()
+    override suspend fun getNews(keywords: String): AllNews {
+        return newsApi.getNews(keywords = keywords, pageSize = 20, page = 1)
     }
 }
