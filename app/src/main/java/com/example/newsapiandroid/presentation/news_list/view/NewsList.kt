@@ -7,21 +7,24 @@ import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Filter
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
-import com.example.newsapiandroid.presentation.news_list.NewsListState
 import com.example.newsapiandroid.presentation.news_list.NewsListViewModel
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
 import com.example.newsapiandroid.presentation.theme.ui.NewsApiAndroidTheme
@@ -30,6 +33,7 @@ import com.example.newsapiandroid.presentation.theme.ui.brandedFontFamily
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.flow.flowOf
 
 @ExperimentalFoundationApi
 @RootNavGraph(start = true) // sets this as the start destination of the default nav graph
@@ -39,38 +43,60 @@ fun NewsList(
     navigator: DestinationsNavigator,
     newsListViewModel: NewsListViewModel = hiltViewModel()
 ) {
-    val state = newsListViewModel.state.value
-
-    NewsListInternal(state = state)
+    val news = newsListViewModel.news().collectAsLazyPagingItems()
+    NewsListInternal(news = news)
 }
 
 @Composable
-private fun NewsListInternal(state: NewsListState) {
+private fun NewsListInternal(news: LazyPagingItems<Article>) {
     Scaffold(topBar = {
         TopBar(
             onFilter = {},
             onSearch = {}
         )
     }) {
-        when (state) {
-            NewsListState.Loading -> {
-                CircularProgressIndicator()
+        LazyVerticalGrid(
+            cells = GridCells.Adaptive(minSize = 280.dp),
+            state = rememberLazyListState(),
+            contentPadding = PaddingValues(Dimens.grid_1_5)
+        ) {
+            items(news.itemCount) { index ->
+                val article = news[index]
+                article?.let {
+                    Article(it)
+                }
             }
-            is NewsListState.Error -> {
-                Text(state.error)
-            }
-            is NewsListState.Success -> {
-                LazyVerticalGrid(
-                    cells = GridCells.Adaptive(minSize = 280.dp),
-                    state = rememberLazyListState(),
-                    contentPadding = PaddingValues(Dimens.grid_1_5)
-                ) {
-                    items(state.news.count()) { index ->
-                        val article = state.news[index]
 
-                        Article(article)
+            if (news.loadState.append is LoadState.Loading) {
+                item {
+                    CircularProgressIndicator()
+                }
+            } else if (news.loadState.append is LoadState.Error) {
+                item {
+                    Text(
+                        text = "Failed to load more items.",
+                        modifier = Modifier.fillMaxSize(),
+                        style = Typogr.subtitle1.copy(textAlign = TextAlign.Center)
+                    )
+                }
+            }
+        }
+
+        news.apply {
+            when (loadState.refresh) {
+                is LoadState.Loading -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
+                is LoadState.Error -> {
+
+                }
+                else -> {}
             }
         }
     }
@@ -130,23 +156,25 @@ private fun Article(article: Article) {
 private fun NewsListPreview() {
     NewsApiAndroidTheme {
         NewsListInternal(
-            state = NewsListState.Success(
-                news = listOf(
-                    Article(
-                        source = Source(
-                            "",
-                            name = ""
-                        ),
-                        author = "",
-                        title = "Nintendo Switch Sports hands-on: Reviving a surefire formula for fun",
-                        description = "It’s hard to believe Wii Sports came out more than 15 years ago. But to me, the strangest thing is that despite being one of the most memorable Wii games of all time, Nintendo never made a proper sequel, that is until now.I got a chance to check out Nintendo …",
-                        content = "",
-                        publishedAt = "",
-                        url = "",
-                        urlToImage = ""
-                    )
+            news = flowOf(
+                PagingData.from(
+                    MutableList(100) {
+                        Article(
+                            source = Source(
+                                "",
+                                name = ""
+                            ),
+                            author = "",
+                            title = "Nintendo Switch Sports hands-on: Reviving a surefire formula for fun",
+                            description = "It’s hard to believe Wii Sports came out more than 15 years ago. But to me, the strangest thing is that despite being one of the most memorable Wii games of all time, Nintendo never made a proper sequel, that is until now.I got a chance to check out Nintendo …",
+                            content = "",
+                            publishedAt = "",
+                            url = "",
+                            urlToImage = ""
+                        )
+                    }
                 )
-            )
+            ).collectAsLazyPagingItems()
         )
     }
 }

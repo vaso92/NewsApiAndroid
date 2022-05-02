@@ -1,7 +1,7 @@
 package com.example.newsapiandroid.data.remote
 
 import com.example.newsapiandroid.common.Constants
-import com.example.newsapiandroid.data.remote.dto.AllNews
+import com.example.newsapiandroid.data.remote.dto.News
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -11,5 +11,5 @@ interface NewsApi {
         @Query("q") keywords: String,
         @Query("pageSize") pageSize: Int,
         @Query("page") page: Int,
-    ): AllNews
+    ): News
 }

@@ -1,7 +1,9 @@
 package com.example.newsapiandroid.domain.repository
 
-import com.example.newsapiandroid.data.remote.dto.AllNews
+import androidx.paging.PagingData
+import com.example.newsapiandroid.data.remote.dto.Article
+import kotlinx.coroutines.flow.Flow
 
 interface NewsRepository {
-    suspend fun getNews(keywords: String): AllNews
+    fun getNews(keywords: String, pageSize: Int): Flow<PagingData<Article>>
 }
