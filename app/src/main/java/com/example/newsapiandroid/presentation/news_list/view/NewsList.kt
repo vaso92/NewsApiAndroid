@@ -1,6 +1,6 @@
 package com.example.newsapiandroid.presentation.news_list.view
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,20 +21,19 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
+import com.example.newsapiandroid.presentation.common.BrandedAppName
+import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
 import com.example.newsapiandroid.presentation.news_list.NewsListViewModel
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
 import com.example.newsapiandroid.presentation.theme.ui.NewsApiAndroidTheme
 import com.example.newsapiandroid.presentation.theme.ui.Typogr
-import com.example.newsapiandroid.presentation.theme.ui.brandedFontFamily
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.flow.flowOf
 
-@ExperimentalFoundationApi
 @RootNavGraph(start = true) // sets this as the start destination of the default nav graph
 @Destination
 @Composable
@@ -44,11 +42,19 @@ fun NewsList(
     newsListViewModel: NewsListViewModel = hiltViewModel()
 ) {
     val news = newsListViewModel.news().collectAsLazyPagingItems()
-    NewsListInternal(news = news)
+    NewsListInternal(
+        news = news,
+        onArticleSelected = { article ->
+            navigator.navigate(ArticleDetailDestination(article))
+        }
+    )
 }
 
 @Composable
-private fun NewsListInternal(news: LazyPagingItems<Article>) {
+private fun NewsListInternal(
+    news: LazyPagingItems<Article>,
+    onArticleSelected: (Article) -> Unit
+) {
     Scaffold(topBar = {
         TopBar(
             onFilter = {},
@@ -63,21 +69,7 @@ private fun NewsListInternal(news: LazyPagingItems<Article>) {
             items(news.itemCount) { index ->
                 val article = news[index]
                 article?.let {
-                    Article(it)
-                }
-            }
-
-            if (news.loadState.append is LoadState.Loading) {
-                item {
-                    CircularProgressIndicator()
-                }
-            } else if (news.loadState.append is LoadState.Error) {
-                item {
-                    Text(
-                        text = "Failed to load more items.",
-                        modifier = Modifier.fillMaxSize(),
-                        style = Typogr.subtitle1.copy(textAlign = TextAlign.Center)
-                    )
+                    Article(article = it, onArticleSelected = onArticleSelected)
                 }
             }
         }
@@ -109,10 +101,7 @@ fun TopBar(
 ) {
     TopAppBar(
         title = {
-            Text(
-                text = stringResource(id = R.string.app_name),
-                style = Typogr.h3.copy(fontFamily = brandedFontFamily)
-            )
+            BrandedAppName()
         },
         navigationIcon = {
             IconButton(onClick = {}) {
@@ -133,11 +122,17 @@ fun TopBar(
 }
 
 @Composable
-private fun Article(article: Article) {
+private fun Article(
+    article: Article,
+    onArticleSelected: (Article) -> Unit
+) {
     Card(
         modifier = Modifier
             .padding(Dimens.grid_1)
             .fillMaxSize()
+            .clickable {
+                onArticleSelected(article)
+            }
     ) {
         Column {
             Text(
@@ -174,7 +169,8 @@ private fun NewsListPreview() {
                         )
                     }
                 )
-            ).collectAsLazyPagingItems()
+            ).collectAsLazyPagingItems(),
+            onArticleSelected = {}
         )
     }
 }

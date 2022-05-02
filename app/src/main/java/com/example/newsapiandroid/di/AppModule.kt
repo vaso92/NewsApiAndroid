@@ -4,6 +4,7 @@ import com.example.newsapiandroid.common.Constants
 import com.example.newsapiandroid.data.remote.NewsApi
 import com.example.newsapiandroid.data.repository.NewsRepositoryImpl
 import com.example.newsapiandroid.domain.repository.NewsRepository
+import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,9 +14,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.moshi.MoshiConverterFactory
+import xin.sparkle.moshi.NullSafeKotlinJsonAdapterFactory
+import xin.sparkle.moshi.NullSafeStandardJsonAdapters
 import javax.inject.Singleton
-
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -36,10 +38,15 @@ object AppModule {
             })
             .build()
 
+        val nullSafeMoshi = Moshi.Builder()
+            .add(NullSafeStandardJsonAdapters.FACTORY)
+            .add(NullSafeKotlinJsonAdapterFactory())
+            .build()
+
         return Retrofit.Builder()
             .client(client)
             .baseUrl(Constants.BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(nullSafeMoshi))
             .build()
             .create(NewsApi::class.java)
     }

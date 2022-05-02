@@ -8,7 +8,6 @@ import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.domain.repository.NewsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel

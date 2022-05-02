@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.ui.Modifier
-import com.example.newsapiandroid.presentation.news_list.view.NavGraphs
 import com.example.newsapiandroid.presentation.theme.ui.NewsApiAndroidTheme
 import com.ramcosta.composedestinations.DestinationsNavHost
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber.DebugTree
 import timber.log.Timber.Forest.plant
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
