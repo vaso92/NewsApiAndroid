@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -25,6 +26,7 @@ import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
 import com.example.newsapiandroid.presentation.common.BrandedAppName
 import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
+import com.example.newsapiandroid.presentation.destinations.SearchNewsDestination
 import com.example.newsapiandroid.presentation.news_list.NewsListViewModel
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
 import com.example.newsapiandroid.presentation.theme.ui.NewsApiAndroidTheme
@@ -41,24 +43,29 @@ fun NewsList(
     navigator: DestinationsNavigator,
     newsListViewModel: NewsListViewModel = hiltViewModel()
 ) {
-    val news = newsListViewModel.news().collectAsLazyPagingItems()
+    val searchKeywords = newsListViewModel.searchKeywords.collectAsState(initial = null).value
+    val news = newsListViewModel.news(searchKeywords).collectAsLazyPagingItems()
     NewsListInternal(
         news = news,
         onArticleSelected = { article ->
             navigator.navigate(ArticleDetailDestination(article))
-        }
+        },
+        onSearchPressed = {
+            navigator.navigate(SearchNewsDestination)
+        },
     )
 }
 
 @Composable
 private fun NewsListInternal(
     news: LazyPagingItems<Article>,
-    onArticleSelected: (Article) -> Unit
+    onArticleSelected: (Article) -> Unit,
+    onSearchPressed: () -> Unit,
 ) {
     Scaffold(topBar = {
         TopBar(
-            onFilter = {},
-            onSearch = {}
+            onFilterPressed = {},
+            onSearchPressed = onSearchPressed,
         )
     }) {
         LazyVerticalGrid(
@@ -96,8 +103,8 @@ private fun NewsListInternal(
 
 @Composable
 fun TopBar(
-    onFilter: () -> Unit,
-    onSearch: () -> Unit
+    onFilterPressed: () -> Unit,
+    onSearchPressed: () -> Unit,
 ) {
     TopAppBar(
         title = {
@@ -110,10 +117,10 @@ fun TopBar(
         },
         backgroundColor = MaterialTheme.colors.primary,
         actions = {
-            IconButton(onClick = onFilter) {
+            IconButton(onClick = onFilterPressed) {
                 Icon(Icons.Filled.Tune, "filter")
             }
-            IconButton(onClick = onSearch) {
+            IconButton(onClick = onSearchPressed) {
                 Icon(Icons.Filled.Search, "search")
             }
         },
@@ -170,7 +177,8 @@ private fun NewsListPreview() {
                     }
                 )
             ).collectAsLazyPagingItems(),
-            onArticleSelected = {}
+            onArticleSelected = {},
+            onSearchPressed = {}
         )
     }
 }

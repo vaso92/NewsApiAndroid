@@ -1,5 +1,6 @@
 package com.example.newsapiandroid.di
 
+import android.content.Context
 import com.example.newsapiandroid.common.Constants
 import com.example.newsapiandroid.data.remote.NewsApi
 import com.example.newsapiandroid.data.repository.NewsRepositoryImpl
@@ -8,6 +9,7 @@ import com.squareup.moshi.Moshi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -53,7 +55,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideNewsRepository(newsApi: NewsApi): NewsRepository {
-        return NewsRepositoryImpl(newsApi = newsApi)
+    fun provideNewsRepository(
+        newsApi: NewsApi,
+        @ApplicationContext context: Context
+    ): NewsRepository {
+        return NewsRepositoryImpl(newsApi = newsApi, context = context)
     }
 }

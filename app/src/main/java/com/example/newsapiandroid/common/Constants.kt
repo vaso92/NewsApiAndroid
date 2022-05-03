@@ -6,4 +6,8 @@ object Constants {
     const val EVERYTHING_URL = "/v2/everything"
     const val TOP_HEADLINES_URL = "/v2/top-headlines"
     const val SOURCES_URL = "/v2/top-headlines/sources"
+
+    // Preferences
+    const val SETTINGS = "SETTINGS"
+    const val SEARCH_KEYWORDS = "SEARCH_KEYWORDS"
 }

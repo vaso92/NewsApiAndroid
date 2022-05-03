@@ -11,12 +11,28 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 @HiltViewModel
-class NewsListViewModel @Inject constructor(private val newsRepository: NewsRepository) :
+class NewsListViewModel @Inject constructor(
+    private val newsRepository: NewsRepository
+) :
     ViewModel() {
     private var currentKeywords: String = "sports"
+    private var currentSearchResult: Flow<PagingData<Article>>? = null
 
-    fun news(): Flow<PagingData<Article>> {
-        return newsRepository.getNews(keywords = currentKeywords, pageSize = 20)
+    val searchKeywords = newsRepository.getSearchKeywords
+
+    fun news(keywords: String?): Flow<PagingData<Article>> {
+        val lastResult = currentSearchResult
+
+        if (lastResult != null && keywords == currentKeywords) {
+            return lastResult
+        }
+
+        if (keywords != null) {
+            currentKeywords = keywords
+        }
+        val newResult = newsRepository.getNews(keywords = currentKeywords, pageSize = 20)
             .cachedIn(viewModelScope)
+        currentSearchResult = newResult
+        return newResult
     }
 }
