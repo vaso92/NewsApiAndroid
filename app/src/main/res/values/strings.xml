@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">NewsApi</string>
+    <string name="article_detail_source">Source: %s</string>
+    <string name="article_detail_author">Author: %s</string>
 </resources>

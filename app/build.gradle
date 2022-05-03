@@ -113,4 +113,7 @@ dependencies {
 
     // Datastore
     implementation "androidx.datastore:datastore-preferences:1.0.0"
+
+    // Landscapist glide
+    implementation "com.github.skydoves:landscapist-glide:1.5.1"
 }
