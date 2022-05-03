@@ -3,6 +3,9 @@
 
     <string name="news_list_saved_articles_button">Saved Articles</string>
 
+    <string name="news_list_saved_no_results_found">No results found.</string>
+    <string name="news_list_saved_failed_to_load">Failed to load.</string>
+
     <string name="article_detail_source">Source: %s</string>
     <string name="article_detail_author">Author: %s</string>
 </resources>

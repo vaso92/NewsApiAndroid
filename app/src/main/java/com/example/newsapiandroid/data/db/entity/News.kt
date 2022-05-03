@@ -7,8 +7,6 @@ import com.example.newsapiandroid.data.remote.dto.Source
 
 @Entity
 data class ArticleEntity(
-    @PrimaryKey(autoGenerate = true)
-    var id: Long = 0,
     val sourceId: String,
     val sourceName: String,
     val author: String,
@@ -16,6 +14,7 @@ data class ArticleEntity(
     val description: String,
     val publishedAt: String,
     val title: String,
+    @PrimaryKey
     val url: String,
     val urlToImage: String
 ) {

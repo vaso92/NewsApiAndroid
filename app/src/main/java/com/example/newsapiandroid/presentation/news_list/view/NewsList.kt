@@ -51,7 +51,9 @@ fun NewsList(
     newsListViewModel: NewsListViewModel = hiltViewModel()
 ) {
     val searchKeywords = newsListViewModel.searchKeywords.collectAsState(initial = null).value
-    val news = newsListViewModel.news(searchKeywords).collectAsLazyPagingItems()
+    val news =
+        searchKeywords?.let { newsListViewModel.news(searchKeywords).collectAsLazyPagingItems() }
+
     NewsListInternal(
         news = news,
         onArticleSelected = { article ->
@@ -68,7 +70,7 @@ fun NewsList(
 
 @Composable
 private fun NewsListInternal(
-    news: LazyPagingItems<Article>,
+    news: LazyPagingItems<Article>?,
     onArticleSelected: (Article) -> Unit,
     onSearchPressed: () -> Unit,
     onSavedArticlesPressed: () -> Unit
@@ -133,34 +135,60 @@ private fun NewsListInternal(
             )
         },
     ) { contentPadding ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 280.dp),
-            state = rememberLazyGridState(),
-            contentPadding = contentPadding
-        ) {
-            items(news.itemCount) { index ->
-                val article = news[index]
-                article?.let {
-                    Article(article = it, onArticleSelected = onArticleSelected)
-                }
-            }
-        }
-
-        news.apply {
-            when (loadState.refresh) {
-                is LoadState.Loading -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        CircularProgressIndicator()
+        if (news != null) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 280.dp),
+                state = rememberLazyGridState(),
+                contentPadding = contentPadding
+            ) {
+                items(news.itemCount) { index ->
+                    val article = news[index]
+                    article?.let {
+                        Article(article = it, onArticleSelected = onArticleSelected)
                     }
                 }
-                is LoadState.Error -> {
+            }
 
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                news.apply {
+                    when (loadState.refresh) {
+                        is LoadState.Loading -> {
+                            CircularProgressIndicator()
+                        }
+                        is LoadState.Error -> {
+                            if (news.itemCount == 0) {
+                                Text(
+                                    text = stringResource(id = R.string.news_list_saved_failed_to_load),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    style = Typogr.body1
+                                )
+                            }
+                        }
+                        is LoadState.NotLoading -> {
+                            if (news.itemCount == 0) {
+                                Text(
+                                    text = stringResource(id = R.string.news_list_saved_no_results_found),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
+                                    style = Typogr.body1
+                                )
+                            }
+                        }
+                    }
                 }
-                else -> {}
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
             }
         }
     }

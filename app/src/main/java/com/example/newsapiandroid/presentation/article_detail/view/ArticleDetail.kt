@@ -12,9 +12,11 @@ import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Launch
-import androidx.compose.material.icons.outlined.Bookmark
+import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -46,6 +48,7 @@ fun ArticleDetail(
 ) {
     ArticleDetailInternal(
         article = article,
+        isBookmarked = newsListViewModel.isBookmarked.collectAsState().value,
         onBackPressed = { navigator.popBackStack() },
         onBookmarkPressed = {
             newsListViewModel.onBookmarkPressed()
@@ -56,6 +59,7 @@ fun ArticleDetail(
 @Composable
 fun ArticleDetailInternal(
     article: Article,
+    isBookmarked: Boolean,
     onBackPressed: () -> Unit,
     onBookmarkPressed: () -> Unit
 ) {
@@ -73,15 +77,23 @@ fun ArticleDetailInternal(
                 backgroundColor = MaterialTheme.colors.primary,
                 actions = {
                     IconButton(onClick = onBookmarkPressed) {
-                        Icon(Icons.Outlined.Bookmark, "bookmark")
+                        Icon(
+                            if (isBookmarked) {
+                                Icons.Filled.Bookmark
+                            } else {
+                                Icons.Outlined.BookmarkAdd
+                            }, "bookmark"
+                        )
                     }
                 },
                 elevation = Dimens.grid_2,
             )
-        }
+        },
     ) { contentPadding ->
         LazyColumn(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier
+                .padding(contentPadding)
+                .padding(Dimens.grid_2),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {

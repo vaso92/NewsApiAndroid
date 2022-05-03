@@ -58,6 +58,15 @@ class NewsRepositoryImpl @Inject constructor(
         newsDao.insertArticle(ArticleEntity.from(article))
     }
 
+    override suspend fun deleteArticle(article: Article) {
+        newsDao.deleteArticle(ArticleEntity.from(article))
+    }
+
+    override fun getArticle(url: String) =
+        newsDao.getArticle(url).transform { articleEntity ->
+            emit(articleEntity?.toArticle())
+        }
+
     override suspend fun getSavedArticles(): Flow<List<Article>> =
         newsDao.getSavedArticles().transform { articleEntities ->
             emit(articleEntities.map { x -> x.toArticle() })

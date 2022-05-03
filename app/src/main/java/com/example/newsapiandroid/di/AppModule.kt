@@ -14,6 +14,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -22,6 +24,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import xin.sparkle.moshi.NullSafeKotlinJsonAdapterFactory
 import xin.sparkle.moshi.NullSafeStandardJsonAdapters
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 @Module
@@ -80,4 +83,12 @@ object AppModule {
     fun provideNewsDao(newsDatabase: NewsDatabase): NewsDao {
         return newsDatabase.newsDao()
     }
+
+    @DbDispatcher
+    @Provides
+    fun providesIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 }
+
+@Retention(AnnotationRetention.BINARY)
+@Qualifier
+annotation class DbDispatcher

@@ -12,11 +12,13 @@ import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.newsapiandroid.presentation.destinations.NewsListDestination
@@ -50,6 +52,7 @@ private fun SearchNewsInternal(
     onTextChanged: (String) -> Unit,
     onSearchPressed: (String) -> Unit
 ) {
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
 
     Row(modifier = Modifier.padding(top = Dimens.grid_2, end = Dimens.grid_2)) {
@@ -59,13 +62,23 @@ private fun SearchNewsInternal(
         TextField(
             value = searchText,
             onValueChange = onTextChanged,
-            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester),
             textStyle = Typogr.body2,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { onSearchPressed(searchText) }),
+            keyboardActions = KeyboardActions(onSearch = {
+                onSearchPressed(searchText)
+            }),
             singleLine = true,
             shape = MaterialTheme.shapes.large
         )
+    }
+
+    DisposableEffect(key1 = Unit) {
+        onDispose {
+            softwareKeyboardController?.hide()
+        }
     }
 
     LaunchedEffect(Unit) {
