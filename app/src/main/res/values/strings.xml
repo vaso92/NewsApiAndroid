@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">NewsApi</string>
+
+    <string name="news_list_saved_articles_button">Saved Articles</string>
+
     <string name="article_detail_source">Source: %s</string>
     <string name="article_detail_author">Author: %s</string>
 </resources>

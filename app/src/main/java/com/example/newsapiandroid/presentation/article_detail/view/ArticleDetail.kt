@@ -47,7 +47,9 @@ fun ArticleDetail(
     ArticleDetailInternal(
         article = article,
         onBackPressed = { navigator.popBackStack() },
-        onFavoritePressed = {}
+        onBookmarkPressed = {
+            newsListViewModel.onBookmarkPressed()
+        }
     )
 }
 
@@ -55,7 +57,7 @@ fun ArticleDetail(
 fun ArticleDetailInternal(
     article: Article,
     onBackPressed: () -> Unit,
-    onFavoritePressed: () -> Unit
+    onBookmarkPressed: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -70,16 +72,16 @@ fun ArticleDetailInternal(
                 },
                 backgroundColor = MaterialTheme.colors.primary,
                 actions = {
-                    IconButton(onClick = onFavoritePressed) {
-                        Icon(Icons.Outlined.Bookmark, "favorite")
+                    IconButton(onClick = onBookmarkPressed) {
+                        Icon(Icons.Outlined.Bookmark, "bookmark")
                     }
                 },
                 elevation = Dimens.grid_2,
             )
         }
-    ) {
+    ) { contentPadding ->
         LazyColumn(
-            modifier = Modifier.padding(horizontal = Dimens.grid_4, vertical = Dimens.grid_2),
+            modifier = Modifier.padding(contentPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {

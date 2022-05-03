@@ -9,16 +9,21 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import com.example.newsapiandroid.common.Constants
+import com.example.newsapiandroid.data.db.NewsDao
+import com.example.newsapiandroid.data.db.entity.ArticleEntity
 import com.example.newsapiandroid.data.paging.NewsPagingSource
 import com.example.newsapiandroid.data.remote.NewsApi
+import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.domain.repository.NewsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import javax.inject.Inject
 
 class NewsRepositoryImpl @Inject constructor(
     private val newsApi: NewsApi,
+    private val newsDao: NewsDao,
     @ApplicationContext private val context: Context
 ) : NewsRepository {
     companion object {
@@ -48,4 +53,13 @@ class NewsRepositoryImpl @Inject constructor(
             pageSize = 20
         )
     ).flow
+
+    override suspend fun saveArticle(article: Article) {
+        newsDao.insertArticle(ArticleEntity.from(article))
+    }
+
+    override suspend fun getSavedArticles(): Flow<List<Article>> =
+        newsDao.getSavedArticles().transform { articleEntities ->
+            emit(articleEntities.map { x -> x.toArticle() })
+        }
 }

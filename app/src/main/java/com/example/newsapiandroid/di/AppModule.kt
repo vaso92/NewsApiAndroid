@@ -1,7 +1,10 @@
 package com.example.newsapiandroid.di
 
 import android.content.Context
+import androidx.room.Room
 import com.example.newsapiandroid.common.Constants
+import com.example.newsapiandroid.data.db.NewsDao
+import com.example.newsapiandroid.data.db.NewsDatabase
 import com.example.newsapiandroid.data.remote.NewsApi
 import com.example.newsapiandroid.data.repository.NewsRepositoryImpl
 import com.example.newsapiandroid.domain.repository.NewsRepository
@@ -57,8 +60,24 @@ object AppModule {
     @Singleton
     fun provideNewsRepository(
         newsApi: NewsApi,
+        newsDao: NewsDao,
         @ApplicationContext context: Context
     ): NewsRepository {
-        return NewsRepositoryImpl(newsApi = newsApi, context = context)
+        return NewsRepositoryImpl(newsApi = newsApi, newsDao = newsDao, context = context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNewsDatabase(@ApplicationContext context: Context): NewsDatabase {
+        return Room.databaseBuilder(
+            context,
+            NewsDatabase::class.java, "news-database"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideNewsDao(newsDatabase: NewsDatabase): NewsDao {
+        return newsDatabase.newsDao()
     }
 }

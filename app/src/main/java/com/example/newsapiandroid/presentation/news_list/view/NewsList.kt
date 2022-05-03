@@ -2,18 +2,21 @@ package com.example.newsapiandroid.presentation.news_list.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyVerticalGrid
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,10 +25,12 @@ import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
 import com.example.newsapiandroid.presentation.common.BrandedAppName
 import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
+import com.example.newsapiandroid.presentation.destinations.SavedArticlesDestination
 import com.example.newsapiandroid.presentation.destinations.SearchNewsDestination
 import com.example.newsapiandroid.presentation.news_list.NewsListViewModel
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
@@ -35,6 +40,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 @RootNavGraph(start = true) // sets this as the start destination of the default nav graph
 @Destination
@@ -53,6 +59,9 @@ fun NewsList(
         onSearchPressed = {
             navigator.navigate(SearchNewsDestination)
         },
+        onSavedArticlesPressed = {
+            navigator.navigate(SavedArticlesDestination)
+        }
     )
 }
 
@@ -61,17 +70,56 @@ private fun NewsListInternal(
     news: LazyPagingItems<Article>,
     onArticleSelected: (Article) -> Unit,
     onSearchPressed: () -> Unit,
+    onSavedArticlesPressed: () -> Unit
 ) {
-    Scaffold(topBar = {
-        TopBar(
-            onFilterPressed = {},
-            onSearchPressed = onSearchPressed,
-        )
-    }) {
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            TopBar(
+                onMenuPressed = {
+                    if (scaffoldState.drawerState.isClosed) {
+                        scope.launch { scaffoldState.drawerState.open() }
+                    }
+                },
+                onFilterPressed = {},
+                onSearchPressed = onSearchPressed,
+            )
+        },
+        drawerContent = {
+            Spacer(modifier = Modifier.size(Dimens.grid_2))
+            Button(
+                onClick = onSavedArticlesPressed,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.grid_2)
+            ) {
+                Row(Modifier.fillMaxWidth(1f)) {
+                    Icon(
+                        imageVector = Icons.Outlined.Bookmark,
+                        contentDescription = "favorite"
+                    )
+                    Spacer(modifier = Modifier.width(Dimens.grid_5))
+                    Text(
+                        text = stringResource(id = R.string.news_list_saved_articles_button),
+                        style = Typogr.button
+                    )
+                }
+            }
+            Divider(
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(Dimens.grid_2)
+                    .align(alignment = Alignment.CenterHorizontally)
+            )
+        },
+    ) { contentPadding ->
         LazyVerticalGrid(
-            cells = GridCells.Adaptive(minSize = 280.dp),
-            state = rememberLazyListState(),
-            contentPadding = PaddingValues(Dimens.grid_1_5)
+            columns = GridCells.Adaptive(minSize = 280.dp),
+            state = rememberLazyGridState(),
+            contentPadding = contentPadding
         ) {
             items(news.itemCount) { index ->
                 val article = news[index]
@@ -103,6 +151,7 @@ private fun NewsListInternal(
 
 @Composable
 fun TopBar(
+    onMenuPressed: () -> Unit,
     onFilterPressed: () -> Unit,
     onSearchPressed: () -> Unit,
 ) {
@@ -111,7 +160,7 @@ fun TopBar(
             BrandedAppName()
         },
         navigationIcon = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = onMenuPressed) {
                 Icon(Icons.Filled.Menu, "menu")
             }
         },
@@ -144,11 +193,17 @@ private fun Article(
         Column {
             Text(
                 text = article.title,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Dimens.grid_2),
                 textAlign = TextAlign.Center,
                 style = Typogr.h6
             )
-            Text(text = article.description, style = Typogr.body2)
+            Text(
+                text = article.description,
+                modifier = Modifier.padding(Dimens.grid_2),
+                style = Typogr.body2
+            )
         }
     }
 }
@@ -178,7 +233,8 @@ private fun NewsListPreview() {
                 )
             ).collectAsLazyPagingItems(),
             onArticleSelected = {},
-            onSearchPressed = {}
+            onSearchPressed = {},
+            onSavedArticlesPressed = {}
         )
     }
 }
