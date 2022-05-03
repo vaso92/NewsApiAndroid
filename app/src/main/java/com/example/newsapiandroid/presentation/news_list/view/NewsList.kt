@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
@@ -89,6 +90,22 @@ private fun NewsListInternal(
             )
         },
         drawerContent = {
+            Row {
+                TopAppBar(
+                    title = {
+                        BrandedAppName()
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            if (scaffoldState.drawerState.isOpen) {
+                                scope.launch { scaffoldState.drawerState.close() }
+                            }
+                        }) {
+                            Icon(Icons.Filled.Close, "close drawer")
+                        }
+                    }
+                )
+            }
             Spacer(modifier = Modifier.size(Dimens.grid_2))
             Button(
                 onClick = onSavedArticlesPressed,
