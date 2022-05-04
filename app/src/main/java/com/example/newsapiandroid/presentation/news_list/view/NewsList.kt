@@ -7,14 +7,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,8 +28,6 @@ import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
 import com.example.newsapiandroid.presentation.common.BrandedAppName
 import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
-import com.example.newsapiandroid.presentation.destinations.SavedArticlesDestination
-import com.example.newsapiandroid.presentation.destinations.SearchNewsDestination
 import com.example.newsapiandroid.presentation.news_list.NewsListViewModel
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
 import com.example.newsapiandroid.presentation.theme.ui.NewsApiAndroidTheme
@@ -41,7 +36,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.launch
 
 @RootNavGraph(start = true) // sets this as the start destination of the default nav graph
 @Destination
@@ -59,12 +53,6 @@ fun NewsList(
         onArticleSelected = { article ->
             navigator.navigate(ArticleDetailDestination(article))
         },
-        onSearchPressed = {
-            navigator.navigate(SearchNewsDestination)
-        },
-        onSavedArticlesPressed = {
-            navigator.navigate(SavedArticlesDestination)
-        }
     )
 }
 
@@ -72,124 +60,60 @@ fun NewsList(
 fun NewsListInternal(
     news: LazyPagingItems<Article>?,
     onArticleSelected: (Article) -> Unit,
-    onSearchPressed: () -> Unit,
-    onSavedArticlesPressed: () -> Unit
 ) {
-    val scaffoldState = rememberScaffoldState()
-    val scope = rememberCoroutineScope()
+    if (news != null) {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 280.dp),
+            state = rememberLazyGridState()
+        ) {
+            items(news.itemCount) { index ->
+                val article = news[index]
+                article?.let {
+                    Article(article = it, onArticleSelected = onArticleSelected)
+                }
+            }
+        }
 
-    Scaffold(
-        scaffoldState = scaffoldState,
-        topBar = {
-            TopBar(
-                onMenuPressed = {
-                    if (scaffoldState.drawerState.isClosed) {
-                        scope.launch { scaffoldState.drawerState.open() }
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            news.apply {
+                when (loadState.refresh) {
+                    is LoadState.Loading -> {
+                        CircularProgressIndicator()
                     }
-                },
-                onFilterPressed = {},
-                onSearchPressed = onSearchPressed,
-            )
-        },
-        drawerContent = {
-            Row {
-                TopAppBar(
-                    title = {
-                        BrandedAppName()
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            if (scaffoldState.drawerState.isOpen) {
-                                scope.launch { scaffoldState.drawerState.close() }
-                            }
-                        }) {
-                            Icon(Icons.Filled.Close, "close drawer")
+                    is LoadState.Error -> {
+                        if (news.itemCount == 0) {
+                            Text(
+                                text = stringResource(id = R.string.news_list_saved_failed_to_load),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                style = Typogr.body1
+                            )
                         }
                     }
-                )
-            }
-            Spacer(modifier = Modifier.size(Dimens.grid_2))
-            Button(
-                onClick = onSavedArticlesPressed,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.grid_2)
-            ) {
-                Row(Modifier.fillMaxWidth(1f)) {
-                    Icon(
-                        imageVector = Icons.Outlined.Bookmark,
-                        contentDescription = "favorite"
-                    )
-                    Spacer(modifier = Modifier.width(Dimens.grid_5))
-                    Text(
-                        text = stringResource(id = R.string.news_list_saved_articles_button),
-                        style = Typogr.button
-                    )
-                }
-            }
-            Divider(
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .padding(Dimens.grid_2)
-                    .align(alignment = Alignment.CenterHorizontally)
-            )
-        },
-    ) { contentPadding ->
-        if (news != null) {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 280.dp),
-                state = rememberLazyGridState(),
-                contentPadding = contentPadding
-            ) {
-                items(news.itemCount) { index ->
-                    val article = news[index]
-                    article?.let {
-                        Article(article = it, onArticleSelected = onArticleSelected)
-                    }
-                }
-            }
-
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                news.apply {
-                    when (loadState.refresh) {
-                        is LoadState.Loading -> {
-                            CircularProgressIndicator()
-                        }
-                        is LoadState.Error -> {
-                            if (news.itemCount == 0) {
-                                Text(
-                                    text = stringResource(id = R.string.news_list_saved_failed_to_load),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    style = Typogr.body1
-                                )
-                            }
-                        }
-                        is LoadState.NotLoading -> {
-                            if (news.itemCount == 0) {
-                                Text(
-                                    text = stringResource(id = R.string.news_list_saved_no_results_found),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    style = Typogr.body1
-                                )
-                            }
+                    is LoadState.NotLoading -> {
+                        if (news.itemCount == 0) {
+                            Text(
+                                text = stringResource(id = R.string.news_list_saved_no_results_found),
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                style = Typogr.body1
+                            )
                         }
                     }
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator()
-            }
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator()
         }
     }
 }
@@ -278,8 +202,6 @@ private fun NewsListPreview() {
                 )
             ).collectAsLazyPagingItems(),
             onArticleSelected = {},
-            onSearchPressed = {},
-            onSavedArticlesPressed = {}
         )
     }
 }
