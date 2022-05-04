@@ -119,34 +119,6 @@ fun NewsListInternal(
 }
 
 @Composable
-fun TopBar(
-    onMenuPressed: () -> Unit,
-    onFilterPressed: () -> Unit,
-    onSearchPressed: () -> Unit,
-) {
-    TopAppBar(
-        title = {
-            BrandedAppName()
-        },
-        navigationIcon = {
-            IconButton(onClick = onMenuPressed) {
-                Icon(Icons.Filled.Menu, "menu")
-            }
-        },
-        backgroundColor = MaterialTheme.colors.primary,
-        actions = {
-            IconButton(onClick = onFilterPressed) {
-                Icon(Icons.Filled.Tune, "filter")
-            }
-            IconButton(onClick = onSearchPressed) {
-                Icon(Icons.Filled.Search, "search")
-            }
-        },
-        elevation = Dimens.grid_2,
-    )
-}
-
-@Composable
 private fun Article(
     article: Article,
     onArticleSelected: (Article) -> Unit
