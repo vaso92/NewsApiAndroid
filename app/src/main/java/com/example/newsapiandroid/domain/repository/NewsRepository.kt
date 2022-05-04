@@ -16,5 +16,5 @@ interface NewsRepository {
 
     fun getArticle(url: String): Flow<Article?>
 
-    suspend fun getSavedArticles(): Flow<List<Article>>
+    fun getSavedArticles(): Flow<PagingData<Article>>
 }

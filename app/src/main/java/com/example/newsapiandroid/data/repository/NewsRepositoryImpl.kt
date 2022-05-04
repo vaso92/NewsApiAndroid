@@ -6,8 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
+import androidx.paging.*
 import com.example.newsapiandroid.common.Constants
 import com.example.newsapiandroid.data.db.NewsDao
 import com.example.newsapiandroid.data.db.entity.ArticleEntity
@@ -67,8 +66,19 @@ class NewsRepositoryImpl @Inject constructor(
             emit(articleEntity?.toArticle())
         }
 
-    override suspend fun getSavedArticles(): Flow<List<Article>> =
-        newsDao.getSavedArticles().transform { articleEntities ->
-            emit(articleEntities.map { x -> x.toArticle() })
+    override fun getSavedArticles(): Flow<PagingData<Article>> =
+        Pager(
+            pagingSourceFactory = {
+                newsDao.getSavedArticles()
+            },
+            config = PagingConfig(
+                pageSize = 20
+            )
+        ).flow.transform { pagingData ->
+            emit(
+                pagingData.map {
+                    it.toArticle()
+                }
+            )
         }
 }

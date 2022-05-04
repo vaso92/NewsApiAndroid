@@ -1,5 +1,6 @@
 package com.example.newsapiandroid.data.db
 
+import androidx.paging.PagingSource
 import androidx.room.*
 import com.example.newsapiandroid.data.db.entity.ArticleEntity
 import kotlinx.coroutines.flow.Flow
@@ -16,5 +17,5 @@ interface NewsDao {
     fun getArticle(url: String): Flow<ArticleEntity?>
 
     @Query("SELECT * FROM articleentity")
-    fun getSavedArticles(): Flow<List<ArticleEntity>>
+    fun getSavedArticles(): PagingSource<Int, ArticleEntity>
 }

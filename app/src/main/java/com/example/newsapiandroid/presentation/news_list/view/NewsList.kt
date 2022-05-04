@@ -69,7 +69,7 @@ fun NewsList(
 }
 
 @Composable
-private fun NewsListInternal(
+fun NewsListInternal(
     news: LazyPagingItems<Article>?,
     onArticleSelected: (Article) -> Unit,
     onSearchPressed: () -> Unit,
