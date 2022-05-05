@@ -5,16 +5,28 @@ import androidx.paging.PagingState
 import com.example.newsapiandroid.data.remote.NewsApi
 import com.example.newsapiandroid.data.remote.dto.Article
 
+enum class SortBy {
+    relevancy,
+    popularity,
+    publishedAt
+}
+
 class NewsPagingSource constructor(
     private val newsApi: NewsApi,
     private val keywords: String,
+    private val sortBy: SortBy,
     private val pageSize: Int
 ) : PagingSource<Int, Article>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Article> {
         return try {
             val page = params.key ?: 1
 
-            val news = newsApi.getNews(keywords = keywords, pageSize = pageSize, page = page)
+            val news = newsApi.getNews(
+                keywords = keywords,
+                pageSize = pageSize,
+                sortBy = sortBy.name,
+                page = page
+            )
             val nextPage = (page + 1).takeIf { it <= news.totalResults }
 
             LoadResult.Page(

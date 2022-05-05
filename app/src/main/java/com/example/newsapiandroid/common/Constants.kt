@@ -10,4 +10,5 @@ object Constants {
     // Preferences
     const val SETTINGS = "SETTINGS"
     const val SEARCH_KEYWORDS = "SEARCH_KEYWORDS"
+    const val SORT_BY = "SORT_BY"
 }

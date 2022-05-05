@@ -10,8 +10,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SearchNewsViewModel @Inject constructor(
     private val newsRepository: NewsRepository
-) :
-    ViewModel() {
+) : ViewModel() {
     val searchText = mutableStateOf("")
 
     fun onSearchPressed() = runBlocking {

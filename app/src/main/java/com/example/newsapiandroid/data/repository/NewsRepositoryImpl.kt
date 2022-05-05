@@ -14,6 +14,7 @@ import com.example.newsapiandroid.common.Constants
 import com.example.newsapiandroid.data.db.NewsDao
 import com.example.newsapiandroid.data.db.entity.ArticleEntity
 import com.example.newsapiandroid.data.paging.NewsPagingSource
+import com.example.newsapiandroid.data.paging.SortBy
 import com.example.newsapiandroid.data.remote.NewsApi
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.domain.repository.NewsRepository
@@ -43,11 +44,25 @@ class NewsRepositoryImpl @Inject constructor(
             it[stringPreferencesKey(Constants.SEARCH_KEYWORDS)]
         }
 
-    override fun getNews(keywords: String, pageSize: Int) = Pager(
+    override suspend fun setSortBy(sortBy: SortBy) {
+        context.dataStore.edit { preferences ->
+            preferences[stringPreferencesKey(Constants.SORT_BY)] = sortBy.name
+        }
+    }
+
+    override val getSortBy: Flow<SortBy>
+        get() = context.dataStore.data.map {
+            kotlin.runCatching {
+                it[stringPreferencesKey(Constants.SORT_BY)]?.let { SortBy.valueOf(it) }
+            }.getOrDefault(SortBy.publishedAt) ?: SortBy.publishedAt
+        }
+
+    override fun getNews(keywords: String, sortBy: SortBy, pageSize: Int) = Pager(
         pagingSourceFactory = {
             NewsPagingSource(
                 newsApi = newsApi,
                 keywords = keywords,
+                sortBy = sortBy,
                 pageSize = pageSize
             )
         },

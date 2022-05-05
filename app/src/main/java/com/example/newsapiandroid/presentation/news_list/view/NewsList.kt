@@ -45,8 +45,13 @@ fun NewsList(
     newsListViewModel: NewsListViewModel = hiltViewModel()
 ) {
     val searchKeywords = newsListViewModel.searchKeywords.collectAsState(initial = null).value
+    val sortBy = newsListViewModel.sortBy.collectAsState(initial = null).value
     val news =
-        searchKeywords?.let { newsListViewModel.news(searchKeywords).collectAsLazyPagingItems() }
+        searchKeywords?.let {
+            sortBy?.let {
+                newsListViewModel.news(searchKeywords, sortBy).collectAsLazyPagingItems()
+            }
+        }
 
     NewsListInternal(
         news = news,

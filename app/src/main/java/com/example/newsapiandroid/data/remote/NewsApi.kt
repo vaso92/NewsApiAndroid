@@ -9,6 +9,7 @@ interface NewsApi {
     @GET(Constants.EVERYTHING_URL)
     suspend fun getNews(
         @Query("q") keywords: String,
+        @Query("sortBy") sortBy: String,
         @Query("pageSize") pageSize: Int,
         @Query("page") page: Int,
     ): News
