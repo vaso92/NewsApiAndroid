@@ -22,6 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.newsapiandroid.R
 import com.example.newsapiandroid.presentation.NavGraphs
 import com.example.newsapiandroid.presentation.common.BrandedAppName
+import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
 import com.example.newsapiandroid.presentation.destinations.NewsListDestination
 import com.example.newsapiandroid.presentation.destinations.SavedArticlesDestination
 import com.example.newsapiandroid.presentation.destinations.SearchNewsDestination
@@ -39,67 +40,81 @@ fun HomeScreen() {
     val navController: NavHostController = rememberNavController()
     val currentBackStackEntryAsState by navController.currentBackStackEntryAsState()
 
-    Scaffold(
-        scaffoldState = scaffoldState,
-        topBar = {
-            TopBar(
-                navBackStackEntry = currentBackStackEntryAsState,
-                onMenuPressed = {
-                    scope.launch { scaffoldState.drawerState.open() }
+    when (currentBackStackEntryAsState?.destination?.route) {
+        ArticleDetailDestination.route -> {
+            Box {
+                DestinationsNavHost(
+                    navGraph = NavGraphs.root,
+                    navController = navController
+                ) {
+
+                }
+            }
+        }
+        else ->
+            Scaffold(
+                scaffoldState = scaffoldState,
+                topBar = {
+                    TopBar(
+                        navBackStackEntry = currentBackStackEntryAsState,
+                        onMenuPressed = {
+                            scope.launch { scaffoldState.drawerState.open() }
+                        },
+                        onFilterPressed = {},
+                        onSearchPressed = { navController.navigate(SearchNewsDestination.route) },
+                    )
                 },
-                onFilterPressed = {},
-                onSearchPressed = { navController.navigate(SearchNewsDestination.route) },
-            )
-        },
-        drawerContent = {
-            Row {
-                TopAppBar(
-                    title = {
-                        BrandedAppName()
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch { scaffoldState.drawerState.close() }
-                        }) {
-                            Icon(Icons.Filled.Close, "close drawer")
-                        }
+                drawerContent = {
+                    Row {
+                        TopAppBar(
+                            title = {
+                                BrandedAppName()
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = {
+                                    scope.launch { scaffoldState.drawerState.close() }
+                                }) {
+                                    Icon(Icons.Filled.Close, "close drawer")
+                                }
+                            }
+                        )
                     }
-                )
+
+                    Spacer(modifier = Modifier.size(Dimens.grid_2))
+
+                    SideMenuButton(
+                        onClick = {
+                            navController.navigate(SavedArticlesDestination.route)
+                            scope.launch { scaffoldState.drawerState.close() }
+                        },
+                        icon = Icons.Outlined.Bookmark,
+                        contentDescription = "favorite",
+                        text = stringResource(id = R.string.news_list_saved_articles_button)
+                    )
+
+                    SideMenuButton(
+                        onClick = {
+                            navController.navigate(NewsListDestination.route)
+                            scope.launch { scaffoldState.drawerState.close() }
+                        },
+                        icon = Icons.Outlined.Newspaper,
+                        contentDescription = "news feed",
+                        text = stringResource(id = R.string.news_list_news_feed_button)
+                    )
+                    Spacer(modifier = Modifier.size(Dimens.grid_2))
+                }
+            ) { contentPadding ->
+                Box(Modifier.padding(contentPadding)) {
+                    DestinationsNavHost(
+                        navGraph = NavGraphs.root,
+                        navController = navController
+                    ) {
+
+                    }
+                }
             }
-
-            Spacer(modifier = Modifier.size(Dimens.grid_2))
-
-            SideMenuButton(
-                onClick = {
-                    navController.navigate(SavedArticlesDestination.route)
-                    scope.launch { scaffoldState.drawerState.close() }
-                },
-                icon = Icons.Outlined.Bookmark,
-                contentDescription = "favorite",
-                text = stringResource(id = R.string.news_list_saved_articles_button)
-            )
-
-            SideMenuButton(
-                onClick = {
-                    navController.navigate(NewsListDestination.route)
-                    scope.launch { scaffoldState.drawerState.close() }
-                },
-                icon = Icons.Outlined.Newspaper,
-                contentDescription = "news feed",
-                text = stringResource(id = R.string.news_list_news_feed_button)
-            )
-            Spacer(modifier = Modifier.size(Dimens.grid_2))
-        }
-    ) { contentPadding ->
-        Box(Modifier.padding(contentPadding)) {
-            DestinationsNavHost(
-                navGraph = NavGraphs.root,
-                navController = navController
-            ) {
-
-            }
-        }
     }
+
 }
 
 @Composable
