@@ -9,6 +9,7 @@ import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.domain.repository.NewsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -21,6 +22,12 @@ class NewsListViewModel @Inject constructor(
 
     val searchKeywords = newsRepository.getSearchKeywords
     val sortBy = newsRepository.getSortBy
+
+    fun setSortBy(sortBy: SortBy) {
+        viewModelScope.launch {
+            newsRepository.setSortBy(sortBy)
+        }
+    }
 
     fun news(keywords: String, sortBy: SortBy): Flow<PagingData<Article>> {
         val lastResult = currentSearchResult

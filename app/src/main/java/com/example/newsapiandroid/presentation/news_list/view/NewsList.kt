@@ -9,10 +9,8 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,6 +23,7 @@ import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.newsapiandroid.R
+import com.example.newsapiandroid.data.paging.SortBy
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
 import com.example.newsapiandroid.presentation.common.SideDrawer
@@ -62,7 +61,8 @@ fun NewsList(
     NewsListInternal(
         navigator = navigator,
         news = news,
-        onFilterPressed = {},
+        currentSortBy = sortBy,
+        onFilterPressed = { newsListViewModel.setSortBy(it) },
         onSearchPressed = { navigator.navigate(SearchNewsDestination.route) },
         onArticleSelected = { article ->
             navigator.navigate(ArticleDetailDestination(article))
@@ -74,8 +74,9 @@ fun NewsList(
 private fun NewsListInternal(
     navigator: DestinationsNavigator,
     news: LazyPagingItems<Article>?,
+    currentSortBy: SortBy?,
     onSearchPressed: () -> Unit,
-    onFilterPressed: () -> Unit,
+    onFilterPressed: (sortBy: SortBy) -> Unit,
     onArticleSelected: (Article) -> Unit,
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -91,9 +92,10 @@ private fun NewsListInternal(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onFilterPressed) {
-                        Icon(Icons.Filled.Tune, "filter")
-                    }
+                    TuneDropdownMenu(
+                        currentSortBy = currentSortBy,
+                        onFilterPressed = onFilterPressed
+                    )
                     IconButton(onClick = onSearchPressed) {
                         Icon(Icons.Filled.Search, "search")
                     }
@@ -261,6 +263,39 @@ private fun Article(
     }
 }
 
+@Composable
+fun TuneDropdownMenu(
+    currentSortBy: SortBy?,
+    onFilterPressed: (SortBy) -> Unit
+) {
+    val expanded = remember { mutableStateOf(false) }
+
+    IconButton(onClick = {
+        expanded.value = !expanded.value
+    }) {
+        Icon(Icons.Filled.Sort, "sort")
+    }
+
+    DropdownMenu(
+        expanded = expanded.value,
+        onDismissRequest = { expanded.value = false },
+    ) {
+        SortBy.values().forEach {
+            DropdownMenuItem(onClick = { onFilterPressed(it) }) {
+                Text(
+                    text = it.name, color = if (currentSortBy == it) {
+                        MaterialTheme.colors.primary
+                    } else {
+                        LocalContentColor.current
+                    }, style = Typogr.button
+                )
+            }
+
+            Divider()
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun NewsListPreview() {
@@ -287,6 +322,7 @@ private fun NewsListPreview() {
                 )
             ).collectAsLazyPagingItems(),
             onArticleSelected = {},
+            currentSortBy = SortBy.popularity,
             onFilterPressed = {},
             onSearchPressed = {}
         )
