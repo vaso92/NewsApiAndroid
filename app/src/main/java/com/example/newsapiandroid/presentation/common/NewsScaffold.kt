@@ -22,9 +22,15 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+sealed class SideMenuItem {
+    object SavedArticles : SideMenuItem()
+    object NewsFeed : SideMenuItem()
+}
+
 @Composable
 fun SideDrawer(
     destinationsNavigator: DestinationsNavigator,
+    selectedItem: SideMenuItem,
     scaffoldState: ScaffoldState,
     scope: CoroutineScope = rememberCoroutineScope()
 ) {
@@ -50,6 +56,7 @@ fun SideDrawer(
             destinationsNavigator.navigate(SavedArticlesDestination.route)
             scope.launch { scaffoldState.drawerState.close() }
         },
+        isSelected = selectedItem is SideMenuItem.SavedArticles,
         icon = Icons.Outlined.Bookmark,
         contentDescription = "favorite",
         text = stringResource(id = R.string.news_list_saved_articles_button)
@@ -60,6 +67,7 @@ fun SideDrawer(
             destinationsNavigator.navigate(NewsListDestination.route)
             scope.launch { scaffoldState.drawerState.close() }
         },
+        isSelected = selectedItem is SideMenuItem.NewsFeed,
         icon = Icons.Outlined.Newspaper,
         contentDescription = "news feed",
         text = stringResource(id = R.string.news_list_news_feed_button)
@@ -91,6 +99,7 @@ fun TopBar(
 @Composable
 fun SideMenuButton(
     onClick: () -> Unit,
+    isSelected: Boolean,
     text: String,
     icon: ImageVector,
     contentDescription: String
@@ -99,7 +108,12 @@ fun SideMenuButton(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Dimens.grid_2)
+            .padding(horizontal = Dimens.grid_2),
+        colors = if (isSelected) {
+            ButtonDefaults.buttonColors()
+        } else {
+            ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.24f))
+        }
     ) {
         Row(Modifier.fillMaxWidth(1f)) {
             Icon(

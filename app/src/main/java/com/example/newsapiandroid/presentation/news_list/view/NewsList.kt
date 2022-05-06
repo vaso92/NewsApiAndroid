@@ -28,6 +28,7 @@ import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
 import com.example.newsapiandroid.presentation.common.SideDrawer
+import com.example.newsapiandroid.presentation.common.SideMenuItem
 import com.example.newsapiandroid.presentation.common.TopBar
 import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
 import com.example.newsapiandroid.presentation.destinations.SearchNewsDestination
@@ -102,6 +103,7 @@ private fun NewsListInternal(
         drawerContent = {
             SideDrawer(
                 destinationsNavigator = navigator,
+                selectedItem = SideMenuItem.NewsFeed,
                 scaffoldState = scaffoldState
             )
         }

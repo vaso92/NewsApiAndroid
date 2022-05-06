@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.newsapiandroid.presentation.common.SideDrawer
+import com.example.newsapiandroid.presentation.common.SideMenuItem
 import com.example.newsapiandroid.presentation.common.TopBar
 import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
 import com.example.newsapiandroid.presentation.news_list.view.NewsListContent
@@ -47,6 +48,7 @@ fun SavedArticles(
         drawerContent = {
             SideDrawer(
                 destinationsNavigator = navigator,
+                selectedItem = SideMenuItem.SavedArticles,
                 scaffoldState = scaffoldState
             )
         }
