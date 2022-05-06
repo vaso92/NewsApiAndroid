@@ -39,9 +39,9 @@ class NewsRepositoryImpl @Inject constructor(
         }
     }
 
-    override val getSearchKeywords: Flow<String?>
+    override val getSearchKeywords: Flow<String>
         get() = context.dataStore.data.map {
-            it[stringPreferencesKey(Constants.SEARCH_KEYWORDS)]
+            it[stringPreferencesKey(Constants.SEARCH_KEYWORDS)] ?: "sports"
         }
 
     override suspend fun setSortBy(sortBy: SortBy) {

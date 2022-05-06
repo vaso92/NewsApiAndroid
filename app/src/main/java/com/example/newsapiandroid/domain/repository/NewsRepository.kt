@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface NewsRepository {
     suspend fun setSearchKeywords(value: String)
-    val getSearchKeywords: Flow<String?>
+    val getSearchKeywords: Flow<String>
 
     suspend fun setSortBy(sortBy: SortBy)
     val getSortBy: Flow<SortBy>
