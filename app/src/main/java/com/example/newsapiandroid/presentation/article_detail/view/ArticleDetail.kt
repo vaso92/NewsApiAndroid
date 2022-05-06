@@ -9,7 +9,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
@@ -29,7 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.presentation.article_detail.ArticleDetailViewModel
-import com.example.newsapiandroid.presentation.common.BrandedAppName
+import com.example.newsapiandroid.presentation.common.TopBar
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
 import com.example.newsapiandroid.presentation.theme.ui.LinkBlue
 import com.example.newsapiandroid.presentation.theme.ui.Typogr
@@ -65,16 +68,12 @@ fun ArticleDetailInternal(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    BrandedAppName()
-                },
+            TopBar(
                 navigationIcon = {
                     IconButton(onClick = onBackPressed) {
                         Icon(Icons.Filled.ArrowBack, "back")
                     }
                 },
-                backgroundColor = MaterialTheme.colors.primary,
                 actions = {
                     IconButton(onClick = onBookmarkPressed) {
                         Icon(
@@ -86,7 +85,6 @@ fun ArticleDetailInternal(
                         )
                     }
                 },
-                elevation = Dimens.grid_2,
             )
         },
     ) { contentPadding ->

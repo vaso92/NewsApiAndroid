@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -26,8 +27,10 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
-import com.example.newsapiandroid.presentation.common.BrandedAppName
+import com.example.newsapiandroid.presentation.common.SideDrawer
+import com.example.newsapiandroid.presentation.common.TopBar
 import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
+import com.example.newsapiandroid.presentation.destinations.SearchNewsDestination
 import com.example.newsapiandroid.presentation.news_list.NewsListViewModel
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
 import com.example.newsapiandroid.presentation.theme.ui.NewsApiAndroidTheme
@@ -35,7 +38,9 @@ import com.example.newsapiandroid.presentation.theme.ui.Typogr
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.ramcosta.composedestinations.navigation.EmptyDestinationsNavigator
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 @RootNavGraph(start = true) // sets this as the start destination of the default nav graph
 @Destination
@@ -54,7 +59,10 @@ fun NewsList(
         }
 
     NewsListInternal(
+        navigator = navigator,
         news = news,
+        onFilterPressed = {},
+        onSearchPressed = { navigator.navigate(SearchNewsDestination.route) },
         onArticleSelected = { article ->
             navigator.navigate(ArticleDetailDestination(article))
         },
@@ -62,9 +70,106 @@ fun NewsList(
 }
 
 @Composable
-fun NewsListInternal(
+private fun NewsListInternal(
+    navigator: DestinationsNavigator,
     news: LazyPagingItems<Article>?,
+    onSearchPressed: () -> Unit,
+    onFilterPressed: () -> Unit,
     onArticleSelected: (Article) -> Unit,
+) {
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        scaffoldState = scaffoldState,
+        topBar = {
+            TopBar(
+                navigationIcon = {
+                    IconButton(onClick = { scope.launch { scaffoldState.drawerState.open() } }) {
+                        Icon(Icons.Filled.Menu, "menu")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onFilterPressed) {
+                        Icon(Icons.Filled.Tune, "filter")
+                    }
+                    IconButton(onClick = onSearchPressed) {
+                        Icon(Icons.Filled.Search, "search")
+                    }
+                },
+            )
+        },
+        drawerContent = {
+            SideDrawer(
+                destinationsNavigator = navigator,
+                scaffoldState = scaffoldState
+            )
+        }
+    ) { contentPadding ->
+        Box(Modifier.padding(contentPadding)) {
+            if (news != null) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 280.dp),
+                    state = rememberLazyGridState()
+                ) {
+                    items(news.itemCount) { index ->
+                        val article = news[index]
+                        article?.let {
+                            Article(article = it, onArticleSelected = onArticleSelected)
+                        }
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    news.apply {
+                        when (loadState.refresh) {
+                            is LoadState.Loading -> {
+                                CircularProgressIndicator()
+                            }
+                            is LoadState.Error -> {
+                                if (news.itemCount == 0) {
+                                    Text(
+                                        text = stringResource(id = R.string.news_list_saved_failed_to_load),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center,
+                                        style = Typogr.body1
+                                    )
+                                }
+                            }
+                            is LoadState.NotLoading -> {
+                                if (news.itemCount == 0) {
+                                    Text(
+                                        text = stringResource(id = R.string.news_list_saved_no_results_found),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center,
+                                        style = Typogr.body1
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NewsListContent(
+    news: LazyPagingItems<Article>?,
+    onArticleSelected: (Article) -> Unit
 ) {
     if (news != null) {
         LazyVerticalGrid(
@@ -159,6 +264,7 @@ private fun Article(
 private fun NewsListPreview() {
     NewsApiAndroidTheme {
         NewsListInternal(
+            navigator = EmptyDestinationsNavigator,
             news = flowOf(
                 PagingData.from(
                     MutableList(100) {
@@ -179,6 +285,8 @@ private fun NewsListPreview() {
                 )
             ).collectAsLazyPagingItems(),
             onArticleSelected = {},
+            onFilterPressed = {},
+            onSearchPressed = {}
         )
     }
 }
