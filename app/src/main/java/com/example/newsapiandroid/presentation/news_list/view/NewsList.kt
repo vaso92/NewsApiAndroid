@@ -26,6 +26,7 @@ import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.paging.SortBy
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
+import com.example.newsapiandroid.presentation.article_detail.view.PublishedAt
 import com.example.newsapiandroid.presentation.common.SideDrawer
 import com.example.newsapiandroid.presentation.common.SideMenuItem
 import com.example.newsapiandroid.presentation.common.TopBar
@@ -259,6 +260,7 @@ private fun Article(
                 modifier = Modifier.padding(Dimens.grid_2),
                 style = Typogr.body2
             )
+            PublishedAt(date = article.publishedAt)
         }
     }
 }

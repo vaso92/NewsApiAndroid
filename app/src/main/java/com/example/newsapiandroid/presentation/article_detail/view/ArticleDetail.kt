@@ -128,7 +128,7 @@ fun ArticleDetailInternal(
 }
 
 @Composable
-private fun PublishedAt(date: String) {
+fun PublishedAt(date: String) {
     runCatching {
         val zonedDateTime = ZonedDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME)
         val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy - HH:mm:ss")
