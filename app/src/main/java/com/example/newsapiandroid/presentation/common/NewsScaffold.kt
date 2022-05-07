@@ -35,10 +35,7 @@ fun SideDrawer(
     scope: CoroutineScope = rememberCoroutineScope()
 ) {
     Row {
-        TopAppBar(
-            title = {
-                BrandedAppName()
-            },
+        TopBar(
             navigationIcon = {
                 IconButton(onClick = {
                     scope.launch { scaffoldState.drawerState.close() }
@@ -112,7 +109,7 @@ fun SideMenuButton(
         colors = if (isSelected) {
             ButtonDefaults.buttonColors()
         } else {
-            ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary.copy(alpha = 0.24f))
+            ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary.copy(alpha = ContentAlpha.disabled))
         }
     ) {
         Row(Modifier.fillMaxWidth(1f)) {
