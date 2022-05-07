@@ -2,14 +2,14 @@ package com.example.newsapiandroid.presentation.news_list.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.outlined.BookmarkAdd
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,11 +26,12 @@ import com.example.newsapiandroid.R
 import com.example.newsapiandroid.data.paging.SortBy
 import com.example.newsapiandroid.data.remote.dto.Article
 import com.example.newsapiandroid.data.remote.dto.Source
+import com.example.newsapiandroid.presentation.article_detail.view.ArticleDetailContent
+import com.example.newsapiandroid.presentation.article_detail.view.ArticleDetailInternal
 import com.example.newsapiandroid.presentation.article_detail.view.PublishedAt
 import com.example.newsapiandroid.presentation.common.SideDrawer
 import com.example.newsapiandroid.presentation.common.SideMenuItem
 import com.example.newsapiandroid.presentation.common.TopBar
-import com.example.newsapiandroid.presentation.destinations.ArticleDetailDestination
 import com.example.newsapiandroid.presentation.destinations.SearchNewsDestination
 import com.example.newsapiandroid.presentation.news_list.NewsListViewModel
 import com.example.newsapiandroid.presentation.theme.ui.Dimens
@@ -40,8 +41,11 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.EmptyDestinationsNavigator
+import io.getstream.butterfly.compose.LocalWindowDpSize
+import io.getstream.butterfly.compose.WindowDpSize
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @RootNavGraph(start = true) // sets this as the start destination of the default nav graph
 @Destination
@@ -59,16 +63,33 @@ fun NewsList(
             }
         }
 
-    NewsListInternal(
-        navigator = navigator,
-        news = news,
-        currentSortBy = sortBy,
-        onFilterPressed = { newsListViewModel.setSortBy(it) },
-        onSearchPressed = { navigator.navigate(SearchNewsDestination.route) },
-        onArticleSelected = { article ->
-            navigator.navigate(ArticleDetailDestination(article))
-        },
-    )
+    val selectedArticle = newsListViewModel.selectedArticle.collectAsState().value
+    val isBookmarked = newsListViewModel.isBookmarked.collectAsState().value
+
+    if (selectedArticle != null &&
+        (LocalWindowDpSize.current is WindowDpSize.Compact ||
+                LocalWindowDpSize.current is WindowDpSize.Medium)
+    ) {
+        ArticleDetailInternal(
+            article = selectedArticle,
+            isBookmarked = isBookmarked,
+            onBackPressed = { newsListViewModel.onArticleSelected(null) },
+            onBookmarkPressed = newsListViewModel::onBookmarkPressed)
+    } else {
+        NewsListInternal(
+            navigator = navigator,
+            news = news,
+            currentSortBy = sortBy,
+            onFilterPressed = { newsListViewModel.setSortBy(it) },
+            onSearchPressed = { navigator.navigate(SearchNewsDestination.route) },
+            onArticleSelected = { article ->
+                newsListViewModel.onArticleSelected(article)
+            },
+            selectedArticle = selectedArticle,
+            onBookmarkPressed = newsListViewModel::onBookmarkPressed,
+            isBookmarked = isBookmarked
+        )
+    }
 }
 
 @Composable
@@ -79,6 +100,9 @@ private fun NewsListInternal(
     onSearchPressed: () -> Unit,
     onFilterPressed: (sortBy: SortBy) -> Unit,
     onArticleSelected: (Article) -> Unit,
+    selectedArticle: Article?,
+    onBookmarkPressed: () -> Unit,
+    isBookmarked: Boolean
 ) {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
@@ -100,6 +124,17 @@ private fun NewsListInternal(
                     IconButton(onClick = onSearchPressed) {
                         Icon(Icons.Filled.Search, "search")
                     }
+                    if (selectedArticle != null) {
+                        IconButton(onClick = onBookmarkPressed) {
+                            Icon(
+                                if (isBookmarked) {
+                                    Icons.Filled.Bookmark
+                                } else {
+                                    Icons.Outlined.BookmarkAdd
+                                }, "bookmark"
+                            )
+                        }
+                    }
                 },
             )
         },
@@ -111,12 +146,29 @@ private fun NewsListInternal(
             )
         }
     ) { contentPadding ->
-        Box(Modifier.padding(contentPadding)) {
-            if (news != null) {
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 280.dp),
-                    state = rememberLazyGridState()
-                ) {
+        NewsListContent(
+            modifier = Modifier.padding(contentPadding),
+            news = news,
+            onArticleSelected = onArticleSelected,
+            selectedArticle = selectedArticle
+        )
+    }
+}
+
+@Composable
+fun NewsListContent(
+    modifier: Modifier = Modifier,
+    news: LazyPagingItems<Article>?,
+    onArticleSelected: (Article) -> Unit,
+    selectedArticle: Article?
+) {
+    if (news != null) {
+        when (LocalWindowDpSize.current) {
+            is WindowDpSize.Compact,
+            is WindowDpSize.Medium -> {
+                Timber.i("WindowDpSize.Compact")
+
+                LazyColumn {
                     items(news.itemCount) { index ->
                         val article = news[index]
                         article?.let {
@@ -124,67 +176,25 @@ private fun NewsListInternal(
                         }
                     }
                 }
+            }
+            is WindowDpSize.Expanded -> {
+                Timber.i("WindowDpSize.Expanded")
 
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    news.apply {
-                        when (loadState.refresh) {
-                            is LoadState.Loading -> {
-                                CircularProgressIndicator()
-                            }
-                            is LoadState.Error -> {
-                                if (news.itemCount == 0) {
-                                    Text(
-                                        text = stringResource(id = R.string.news_list_saved_failed_to_load),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Center,
-                                        style = Typogr.body1
-                                    )
-                                }
-                            }
-                            is LoadState.NotLoading -> {
-                                if (news.itemCount == 0) {
-                                    Text(
-                                        text = stringResource(id = R.string.news_list_saved_no_results_found),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        textAlign = TextAlign.Center,
-                                        style = Typogr.body1
-                                    )
-                                }
+                Row {
+                    LazyColumn(Modifier.width(300.dp)) {
+                        items(news.itemCount) { index ->
+                            val article = news[index]
+                            article?.let {
+                                Article(article = it, onArticleSelected = onArticleSelected)
                             }
                         }
                     }
-                }
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun NewsListContent(
-    news: LazyPagingItems<Article>?,
-    onArticleSelected: (Article) -> Unit
-) {
-    if (news != null) {
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 280.dp),
-            state = rememberLazyGridState()
-        ) {
-            items(news.itemCount) { index ->
-                val article = news[index]
-                article?.let {
-                    Article(article = it, onArticleSelected = onArticleSelected)
+                    if (selectedArticle != null) {
+                        ArticleDetailContent(
+                            modifier = Modifier.fillMaxSize(),
+                            article = selectedArticle
+                        )
+                    }
                 }
             }
         }
@@ -324,9 +334,12 @@ private fun NewsListPreview() {
                 )
             ).collectAsLazyPagingItems(),
             onArticleSelected = {},
+            selectedArticle = null,
             currentSortBy = SortBy.popularity,
             onFilterPressed = {},
-            onSearchPressed = {}
+            onSearchPressed = {},
+            onBookmarkPressed = {},
+            isBookmarked = false
         )
     }
 }

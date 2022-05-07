@@ -88,41 +88,49 @@ fun ArticleDetailInternal(
             )
         },
     ) { contentPadding ->
-        LazyColumn(
+        ArticleDetailContent(
             modifier = Modifier
                 .padding(contentPadding)
                 .padding(Dimens.grid_2),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            item {
-                Spacer(modifier = Modifier.size(Dimens.grid_2))
-                Text(text = article.title, textAlign = TextAlign.Center, style = Typogr.h5)
-                Spacer(modifier = Modifier.size(Dimens.grid_2))
-            }
-            item {
-                GlideImage(
-                    imageModel = article.urlToImage,
-                    contentScale = ContentScale.Crop,
+            article = article
+        )
+    }
+}
+
+@Composable
+fun ArticleDetailContent(modifier: Modifier = Modifier, article: Article) {
+    LazyColumn(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
+            Spacer(modifier = Modifier.size(Dimens.grid_2))
+            Text(text = article.title, textAlign = TextAlign.Center, style = Typogr.h5)
+            Spacer(modifier = Modifier.size(Dimens.grid_2))
+        }
+        item {
+            GlideImage(
+                imageModel = article.urlToImage,
+                contentScale = ContentScale.Crop,
+            )
+            PublishedAt(date = article.publishedAt)
+            Spacer(modifier = Modifier.size(Dimens.grid_2))
+        }
+        item {
+            Text(text = article.content, style = Typogr.body1)
+            Spacer(modifier = Modifier.size(Dimens.grid_2))
+            Row {
+                SourceLink(sourceName = article.source.name, sourceUrl = article.url)
+                Spacer(Modifier.weight(1f))
+                Text(
+                    text = stringResource(
+                        id = R.string.article_detail_author,
+                        article.author
+                    ),
+                    style = Typogr.caption
                 )
-                PublishedAt(date = article.publishedAt)
-                Spacer(modifier = Modifier.size(Dimens.grid_2))
             }
-            item {
-                Text(text = article.content, style = Typogr.body1)
-                Spacer(modifier = Modifier.size(Dimens.grid_2))
-                Row {
-                    SourceLink(sourceName = article.source.name, sourceUrl = article.url)
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        text = stringResource(
-                            id = R.string.article_detail_author,
-                            article.author
-                        ),
-                        style = Typogr.caption
-                    )
-                }
-                Spacer(modifier = Modifier.size(Dimens.grid_2))
-            }
+            Spacer(modifier = Modifier.size(Dimens.grid_2))
         }
     }
 }
@@ -135,7 +143,7 @@ fun PublishedAt(date: String) {
         zonedDateTime.format(formatter)
     }.onSuccess {
         Row {
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f).padding(Dimens.grid_0_5))
             Text(text = it, style = Typogr.overline)
         }
     }

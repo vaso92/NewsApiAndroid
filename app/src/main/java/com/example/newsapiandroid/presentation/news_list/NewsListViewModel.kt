@@ -6,15 +6,18 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.example.newsapiandroid.data.paging.SortBy
 import com.example.newsapiandroid.data.remote.dto.Article
+import com.example.newsapiandroid.di.DbDispatcher
 import com.example.newsapiandroid.domain.repository.NewsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NewsListViewModel @Inject constructor(
-    private val newsRepository: NewsRepository
+    private val newsRepository: NewsRepository,
+    @DbDispatcher private val dbDispatcher: CoroutineDispatcher
 ) : ViewModel() {
     private var currentKeywords: String? = null
     private var currentSortBy: SortBy? = null
@@ -43,5 +46,41 @@ class NewsListViewModel @Inject constructor(
             .cachedIn(viewModelScope)
         currentSearchResult = newResult
         return newResult
+    }
+
+    private val _selectedArticle = MutableStateFlow<Article?>(null)
+    val selectedArticle: StateFlow<Article?> = _selectedArticle
+
+    fun onArticleSelected(article: Article?) {
+        _selectedArticle.value = article
+    }
+
+    val isBookmarked = selectedArticle.flatMapLatest { article ->
+        if (article != null) {
+            newsRepository.getArticle(article.url)
+                .transform {
+                    it?.let { emit(true) } ?: emit(false)
+                }
+        } else {
+            flow {  }
+        }
+    }
+        .flowOn(dbDispatcher)
+        .stateIn(
+            viewModelScope,
+            started = SharingStarted.WhileSubscribed(),
+            initialValue = false
+        )
+
+    fun onBookmarkPressed() {
+        viewModelScope.launch(dbDispatcher) {
+            selectedArticle.value?.let { article ->
+                if (isBookmarked.value) {
+                    newsRepository.deleteArticle(article)
+                } else {
+                    newsRepository.saveArticle(article)
+                }
+            }
+        }
     }
 }

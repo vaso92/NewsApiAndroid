@@ -58,7 +58,8 @@ fun SavedArticles(
                 news = news,
                 onArticleSelected = { article ->
                     navigator.navigate(ArticleDetailDestination(article))
-                }
+                },
+                selectedArticle = null
             )
         }
     }
