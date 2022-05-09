@@ -1,4 +1,4 @@
-package com.example.newsapiandroid.presentation.article_detail.view;
+package com.example.newsapiandroid.presentation.article_detail.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -9,10 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
@@ -111,7 +108,9 @@ fun ArticleDetailContent(modifier: Modifier = Modifier, article: Article) {
         item {
             GlideImage(
                 imageModel = article.urlToImage,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.Fit,
+                loading = { CircularProgressIndicator() },
+                failure = { Text("Failed to load image.") }
             )
             PublishedAt(date = article.publishedAt)
             Spacer(modifier = Modifier.size(Dimens.grid_2))
@@ -143,7 +142,11 @@ fun PublishedAt(date: String) {
         zonedDateTime.format(formatter)
     }.onSuccess {
         Row {
-            Spacer(modifier = Modifier.weight(1f).padding(Dimens.grid_0_5))
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(Dimens.grid_0_5)
+            )
             Text(text = it, style = Typogr.overline)
         }
     }
